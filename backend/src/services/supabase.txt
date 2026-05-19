@@ -1,0 +1,70 @@
+-- Users
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text unique not null,
+  password text not null,
+  role text default 'user',
+  avatar text,
+  created_at timestamp default now()
+);
+
+-- API Keys (stored encrypted)
+create table api_keys (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade unique,
+  whatsapp_token text,
+  phone_number_id text,
+  business_account_id text,
+  groq_api_key text,
+  webhook_verify_token text,
+  updated_at timestamp default now()
+);
+
+-- Templates
+create table templates (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  name text not null,
+  content text not null,
+  category text,
+  variables jsonb default '[]',
+  created_at timestamp default now()
+);
+
+-- Contacts
+create table contacts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  name text not null,
+  phone text not null,
+  email text,
+  tags jsonb default '[]',
+  notes text,
+  created_at timestamp default now()
+);
+
+-- Automations
+create table automations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  name text not null,
+  trigger_type text not null,
+  trigger_value text,
+  action_type text not null,
+  action_value text,
+  is_active boolean default true,
+  created_at timestamp default now()
+);
+
+-- Messages
+create table messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  to_number text not null,
+  message_type text default 'text',
+  content text not null,
+  status text default 'sent',
+  meta_message_id text,
+  created_at timestamp default now()
+);
