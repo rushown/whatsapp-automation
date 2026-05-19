@@ -2,20 +2,22 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Send, FileText, Zap, Users, BarChart3,
-  Key, Settings, LogOut, MessageSquare, Menu, X, ChevronRight
+  Key, Settings, LogOut, MessageSquare, Menu, X, ChevronRight,
+  FileOutput 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const navItems = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/send', icon: Send, label: 'Send Message' },
-  { path: '/templates', icon: FileText, label: 'Templates' },
-  { path: '/automation', icon: Zap, label: 'Automation' },
-  { path: '/contacts', icon: Users, label: 'Contacts' },
-  { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-  { path: '/api-keys', icon: Key, label: 'API Keys' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  { path: '/dashboard',        icon: LayoutDashboard, label: 'Dashboard'       },
+  { path: '/send',             icon: Send,            label: 'Send Message'    },
+  { path: '/templates',        icon: FileText,        label: 'Templates'       },
+  { path: '/automation',       icon: Zap,             label: 'Automation'      },
+  { path: '/contacts',         icon: Users,           label: 'Contacts'        },
+  { path: '/analytics',        icon: BarChart3,       label: 'Analytics'       },
+  { path: '/api-keys',         icon: Key,             label: 'API Keys'        },
+  { path: '/document-flows',   icon: FileOutput,      label: 'Document Flows'  },
+  { path: '/settings',         icon: Settings,        label: 'Settings'        },
 ];
 
 export default function Layout() {

@@ -12,6 +12,7 @@ import ContactsPage from './pages/ContactsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ApiKeysPage from './pages/ApiKeysPage';
 import SettingsPage from './pages/SettingsPage';
+import DocumentFlowsPage from './pages/DocumentFlowsPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -56,6 +57,7 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="api-keys" element={<ApiKeysPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="document-flows" element={<DocumentFlowsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

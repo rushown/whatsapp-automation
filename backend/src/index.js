@@ -47,6 +47,7 @@ app.use('/api/automation', automationRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/contacts', contactRoutes);
+app.use('/api/document-flows', require('./routes/documentFlows'));
 
 // Health check
 app.get('/api/health', (req, res) => {
