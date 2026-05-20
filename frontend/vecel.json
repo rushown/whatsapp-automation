@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd frontend && npm ci && npm run build",
-  "outputDirectory": "frontend/dist",
   "framework": "vite",
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
