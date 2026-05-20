@@ -29,6 +29,8 @@ const app = express();
 app.locals.memoryIntents = [];
 
 validateProductionConfig();
+const { initDb } = require('./lib/db');
+initDb().catch(err => console.error('[db] init failed:', err.message));
 
 app.use(helmet({ contentSecurityPolicy: config.nodeEnv === 'production' }));
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));

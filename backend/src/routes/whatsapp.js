@@ -1,11 +1,11 @@
 const express = require('express');
 const axios = require('axios');
 const { authenticate } = require('../middleware/auth');
-const { apiKeys, messages, uuidv4 } = require('../store');
+const { messages, uuidv4 } = require('../store');
+const { getKeys } = require('../lib/db');
 
 const router = express.Router();
 
-const getKeys = (userId) => apiKeys[userId] || {};
 
 const metaAPI = (token, version = 'v18.0') =>
   axios.create({
@@ -17,7 +17,7 @@ const metaAPI = (token, version = 'v18.0') =>
 router.post('/send', authenticate, async (req, res) => {
   try {
     const { to, message, type = 'text' } = req.body;
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.phoneNumberId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
@@ -54,7 +54,7 @@ router.post('/send', authenticate, async (req, res) => {
 router.post('/send-template', authenticate, async (req, res) => {
   try {
     const { to, templateName, languageCode = 'en_US', components = [] } = req.body;
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.phoneNumberId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
@@ -77,7 +77,7 @@ router.post('/send-template', authenticate, async (req, res) => {
 router.post('/send-media', authenticate, async (req, res) => {
   try {
     const { to, mediaType, mediaUrl, caption } = req.body;
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.phoneNumberId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
@@ -105,7 +105,7 @@ router.get('/messages', authenticate, (req, res) => {
 // Get WhatsApp templates from Meta
 router.get('/meta-templates', authenticate, async (req, res) => {
   try {
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.businessAccountId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
@@ -120,7 +120,7 @@ router.get('/meta-templates', authenticate, async (req, res) => {
 // Get phone number info
 router.get('/phone-info', authenticate, async (req, res) => {
   try {
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.phoneNumberId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
@@ -136,7 +136,7 @@ router.get('/phone-info', authenticate, async (req, res) => {
 router.post('/ai-reply', authenticate, async (req, res) => {
   try {
     const { incomingMessage, context = '', provider: reqProvider } = req.body;
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     const { getSupabase } = require('../lib/supabase');
     const { chatCompletion, HUMAN_SYSTEM_PROMPT } = require('../services/aiProvider');
 
@@ -178,7 +178,7 @@ router.post('/ai-reply', authenticate, async (req, res) => {
 router.post('/mark-read', authenticate, async (req, res) => {
   try {
     const { messageId } = req.body;
-    const keys = getKeys(req.user.id);
+    const keys = await getKeys(req.user.id);
     if (!keys.whatsappToken || !keys.phoneNumberId) {
       return res.status(400).json({ error: 'WhatsApp API credentials not configured' });
     }
