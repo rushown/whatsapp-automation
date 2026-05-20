@@ -9,7 +9,8 @@
     "test": "node ../scripts/smoke-test.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
