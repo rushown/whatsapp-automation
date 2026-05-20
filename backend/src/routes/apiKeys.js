@@ -1,8 +1,23 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
 const { getSupabase } = require('../lib/supabase');
+const { encrypt, decrypt } = require('../lib/encryption');
 
 const router = express.Router();
+
+// Decrypt all keys from DB row — only called when keys are actually needed
+function decryptRow(data) {
+  return {
+    whatsappToken:      decrypt(data.whatsapp_token),
+    phoneNumberId:      decrypt(data.phone_number_id),
+    businessAccountId:  decrypt(data.business_account_id),
+    groqApiKey:         decrypt(data.groq_api_key),
+    deepseekApiKey:     decrypt(data.deepseek_api_key),
+    openaiApiKey:       decrypt(data.openai_api_key),
+    elevenLabsApiKey:   decrypt(data.elevenlabs_api_key),
+    webhookVerifyToken: decrypt(data.webhook_verify_token),
+  };
+}
 
 async function getKeys(userId) {
   const sb = getSupabase();
@@ -10,16 +25,7 @@ async function getKeys(userId) {
   const { data, error } = await sb.from('api_keys').select('*').eq('user_id', userId).maybeSingle();
   if (error) console.error('[getKeys error]', error);
   if (!data) return {};
-  return {
-    whatsappToken:      data.whatsapp_token,
-    phoneNumberId:      data.phone_number_id,
-    businessAccountId:  data.business_account_id,
-    groqApiKey:         data.groq_api_key,
-    deepseekApiKey:     data.deepseek_api_key,
-    openaiApiKey:       data.openai_api_key,
-    elevenLabsApiKey:   data.elevenlabs_api_key,
-    webhookVerifyToken: data.webhook_verify_token,
-  };
+  return decryptRow(data);
 }
 
 async function saveKeys(userId, keys) {
@@ -27,14 +33,14 @@ async function saveKeys(userId, keys) {
   if (!sb) return;
   const { error } = await sb.from('api_keys').upsert({
     user_id:              userId,
-    whatsapp_token:       keys.whatsappToken      || null,
-    phone_number_id:      keys.phoneNumberId      || null,
-    business_account_id:  keys.businessAccountId  || null,
-    groq_api_key:         keys.groqApiKey         || null,
-    deepseek_api_key:     keys.deepseekApiKey     || null,
-    openai_api_key:       keys.openaiApiKey       || null,
-    elevenlabs_api_key:   keys.elevenLabsApiKey   || null,
-    webhook_verify_token: keys.webhookVerifyToken || null,
+    whatsapp_token:       encrypt(keys.whatsappToken)      || null,
+    phone_number_id:      encrypt(keys.phoneNumberId)      || null,
+    business_account_id:  encrypt(keys.businessAccountId)  || null,
+    groq_api_key:         encrypt(keys.groqApiKey)         || null,
+    deepseek_api_key:     encrypt(keys.deepseekApiKey)     || null,
+    openai_api_key:       encrypt(keys.openaiApiKey)       || null,
+    elevenlabs_api_key:   encrypt(keys.elevenLabsApiKey)   || null,
+    webhook_verify_token: encrypt(keys.webhookVerifyToken) || null,
     updated_at:           new Date().toISOString(),
   }, { onConflict: 'user_id' });
   if (error) console.error('[saveKeys error]', error);
@@ -59,7 +65,7 @@ async function deleteKey(userId, keyName) {
   if (error) console.error('[deleteKey error]', error);
 }
 
-// Get API keys (masked)
+// Get API keys (masked) — decrypts then masks, never sends plaintext to frontend
 router.get('/', authenticate, async (req, res) => {
   try {
     const keys = await getKeys(req.user.id);
@@ -78,7 +84,7 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// Get raw keys (for use in service calls - internal)
+// Get raw decrypted keys — internal use only for service calls
 router.get('/raw', authenticate, async (req, res) => {
   try {
     const keys = await getKeys(req.user.id);
@@ -96,7 +102,7 @@ router.get('/raw', authenticate, async (req, res) => {
   }
 });
 
-// Save API keys
+// Save API keys — encrypts before storing
 router.post('/', authenticate, async (req, res) => {
   try {
     const {
