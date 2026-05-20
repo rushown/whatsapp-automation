@@ -7,7 +7,8 @@ const router = express.Router();
 async function getKeys(userId) {
   const sb = getSupabase();
   if (!sb) return {};
-  const { data } = await sb.from('api_keys').select('*').eq('user_id', userId).maybeSingle();
+  const { data, error } = await sb.from('api_keys').select('*').eq('user_id', userId).maybeSingle();
+  if (error) console.error('[getKeys error]', error);
   if (!data) return {};
   return {
     whatsappToken:      data.whatsapp_token,
@@ -24,7 +25,7 @@ async function getKeys(userId) {
 async function saveKeys(userId, keys) {
   const sb = getSupabase();
   if (!sb) return;
-  await sb.from('api_keys').upsert({
+  const { error } = await sb.from('api_keys').upsert({
     user_id:              userId,
     whatsapp_token:       keys.whatsappToken      || null,
     phone_number_id:      keys.phoneNumberId      || null,
@@ -36,6 +37,7 @@ async function saveKeys(userId, keys) {
     webhook_verify_token: keys.webhookVerifyToken || null,
     updated_at:           new Date().toISOString(),
   }, { onConflict: 'user_id' });
+  if (error) console.error('[saveKeys error]', error);
 }
 
 async function deleteKey(userId, keyName) {
@@ -53,7 +55,8 @@ async function deleteKey(userId, keyName) {
   };
   const col = colMap[keyName];
   if (!col) return;
-  await sb.from('api_keys').update({ [col]: null, updated_at: new Date().toISOString() }).eq('user_id', userId);
+  const { error } = await sb.from('api_keys').update({ [col]: null, updated_at: new Date().toISOString() }).eq('user_id', userId);
+  if (error) console.error('[deleteKey error]', error);
 }
 
 // Get API keys (masked)
