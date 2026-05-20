@@ -26,10 +26,10 @@ export default function DashboardPage() {
   };
 
   const statCards = [
-    { label: 'Messages Sent', value: stats?.messagesSent || 0, icon: Send, color: '#128c7e', bg: 'rgba(18,140,126,0.1)' },
-    { label: 'Total Contacts', value: stats?.totalContacts || 0, icon: Users, color: '#3182ce', bg: 'rgba(49,130,206,0.1)' },
-    { label: 'Active Automations', value: stats?.activeAutomations || 0, icon: Zap, color: '#c9a84c', bg: 'rgba(201,168,76,0.1)' },
-    { label: 'Templates Created', value: stats?.totalTemplates || 0, icon: FileText, color: '#805ad5', bg: 'rgba(128,90,213,0.1)' },
+    { label: 'Messages Handled', value: stats?.totalMessages || 0, icon: MessageSquare, color: '#128c7e', bg: 'rgba(18,140,126,0.1)' },
+    { label: 'Intents Matched', value: stats?.intentsMatched || 0, icon: TrendingUp, color: '#3182ce', bg: 'rgba(49,130,206,0.1)' },
+    { label: 'Voice Messages', value: stats?.voiceMessagesSent || 0, icon: Send, color: '#c9a84c', bg: 'rgba(201,168,76,0.1)' },
+    { label: 'Silent (no match)', value: stats?.silentIgnored || 0, icon: Activity, color: '#805ad5', bg: 'rgba(128,90,213,0.1)' },
   ];
 
   const quickActions = [
@@ -67,7 +67,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Chart + Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {/* Chart */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>

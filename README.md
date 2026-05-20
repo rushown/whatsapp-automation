@@ -1,95 +1,235 @@
-# WhatsApp Automation Platform
+# WAutomate — Production WhatsApp Intent Bot
 
-A full-stack WhatsApp automation platform using Meta Cloud API and Groq AI.
+A production-ready WhatsApp chatbot built on the **Meta WhatsApp Cloud API (v18+)**, with **strict intent matching** (OpenAI embeddings + cosine similarity), **Groq / DeepSeek** for human-like replies, **ElevenLabs** voice messages, **Supabase** persistence, and a responsive **React + Vite** admin panel.
 
-## Project Structure
+## Core behaviour
+
+| Rule | Behaviour |
+|------|-----------|
+| Intent match | User message is embedded and compared to configured intents |
+| Below threshold | **Complete silence** — no reply |
+| Data collection | Each answer is saved to Supabase **before** the next question or any API call |
+| Voice intents | ElevenLabs TTS → WhatsApp audio message → temp file cleanup |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Meta[Meta Webhook] --> API[Express API]
+  API --> Match[Intent Matcher]
+  Match --> OpenAI[OpenAI Embeddings]
+  Match -->|match| Flow[Workflow Engine]
+  Flow --> SB[(Supabase)]
+  Flow --> Groq[Groq / DeepSeek]
+  Flow --> EL[ElevenLabs]
+  Flow --> WA[Meta Send API]
+  Admin[React Admin] --> API
+  Portal[User Portal OTP] --> API
+```
+
+## Stack
+
+- **Frontend**: React 18, Vite, React Router, Recharts, Lucide
+- **Backend**: Node.js, Express, Helmet, rate limiting
+- **Database / Auth**: Supabase (PostgreSQL + RLS)
+- **AI**: OpenAI (embeddings), Groq or DeepSeek (chat), configurable in admin
+- **Voice**: ElevenLabs
+- **Messaging**: Meta Graph API `v21.0` (configurable)
+
+## Project structure
 
 ```
 whatsapp-automation/
-├── backend/                        # Node.js + Express API
-│   ├── index.js                    # Main entry point
-│   ├── store.js                    # In-memory data store
-│   ├── package.json
-│   ├── .env.example                # Environment variables template
-│   ├── render.yaml                 # Render.com deployment config
-│   └── src/
-│       ├── middleware/
-│       │   └── auth.js             # JWT auth middleware
-│       └── routes/
-│           ├── auth.js             # Login / auth routes
-│           ├── apikeys.js          # API keys management (Meta, Groq)
-│           ├── whatsapp.js         # WhatsApp Meta API routes
-│           ├── automation.js       # Automation rules & triggers
-│           ├── templates.js        # Message templates
-│           ├── contacts.js         # Contacts management
-│           └── analytics.js        # Analytics & stats
-│
-├── frontend/                       # React + Vite app
-│   ├── index.html
-│   ├── index.css                   # Global styles (cream theme)
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
-│       ├── index.jsx               # Entry point
-│       ├── App.jsx                 # Main routing
-│       ├── lib/
-│       │   └── api.js              # Axios API client
-│       ├── context/
-│       │   └── AuthContext.jsx     # Auth state & provider
-│       ├── components/
-│       │   ├── Layout.jsx          # App shell / layout wrapper
-│       │   └── Sidebar.jsx         # Navigation sidebar
-│       └── pages/
-│           ├── LoginPage.jsx
-│           ├── DashboardPage.jsx
-│           ├── SendMessagePage.jsx
-│           ├── TemplatesPage.jsx
-│           ├── AutomationPage.jsx
-│           ├── ContactsPage.jsx
-│           └── AnalyticsPage.jsx
-│
-├── vercel.json                     # Vercel deployment config (frontend)
-├── .gitignore
-├── .env.example                    # Root env example
-└── README.md
+├── backend/src/
+│   ├── index.js              # Server + webhook
+│   ├── services/
+│   │   ├── webhookProcessor.js
+│   │   ├── intentMatcher.js
+│   │   ├── embeddings.js
+│   │   ├── aiProvider.js     # Groq + DeepSeek + OpenAI
+│   │   ├── elevenLabs.js
+│   │   ├── dataCollection.js
+│   │   └── whatsappMeta.js
+│   └── routes/               # intents, conversations, users, bot-config, portal
+├── frontend/src/             # Admin + user portal UI
+├── supabase/schema.sql       # Full DB schema + RLS
+└── scripts/seed-admin.js
 ```
 
-## Quick Start
+## Local setup
 
-### Backend
+### 1. Clone and install
+
+```bash
+git clone <your-repo> whatsapp-automation
+cd whatsapp-automation
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+### 2. Environment variables
+
+```bash
+cp .env.example backend/.env
+# Edit backend/.env with your keys
+```
+
+Required for full bot functionality:
+
+| Variable | Purpose |
+|----------|---------|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side DB access |
+| `META_WHATSAPP_TOKEN` | Meta permanent token |
+| `META_PHONE_NUMBER_ID` | WhatsApp phone number ID |
+| `WEBHOOK_VERIFY_TOKEN` | Meta webhook verification |
+| `OPENAI_API_KEY` | Intent embeddings |
+| `GROQ_API_KEY` or `DEEPSEEK_API_KEY` | Response personalization |
+| `ELEVENLABS_API_KEY` | Voice replies (optional) |
+
+Frontend (`frontend/.env`):
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+### 3. Supabase
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Enable **pgvector** extension (Database → Extensions)
+3. Run `supabase/schema.sql` in the SQL Editor
+4. Seed admin:
+
 ```bash
 cd backend
-cp .env.example .env
-# Fill in your credentials in .env
-npm install
-npm run dev
+node ../scripts/seed-admin.js
+# Default: admin@example.com / Admin@1234
 ```
 
-### Frontend
+Without Supabase, the API falls back to in-memory storage and a local admin user (`admin@example.com` / `Admin@1234`).
+
+### 4. Run
+
 ```bash
-cd frontend
-npm install
-npm run dev
+# Terminal 1 — API (port 5000)
+cd backend && npm run dev
+
+# Terminal 2 — Admin UI (port 5173)
+cd frontend && npm run dev
 ```
 
-## Deployment
+- Admin: http://localhost:5173/login  
+- User portal: http://localhost:5173/portal  
 
-### Backend → Render
-- Connect your GitHub repo to [Render](https://render.com)
-- Use the included `backend/render.yaml` for automatic config
+## Meta webhook configuration
 
-### Frontend → Vercel
-- Connect your GitHub repo to [Vercel](https://vercel.com)
-- Set root directory to `frontend`
-- The included `vercel.json` handles SPA routing
+1. In [Meta Developer Console](https://developers.facebook.com/) → your app → WhatsApp → Configuration
+2. **Callback URL**: `https://YOUR-BACKEND-DOMAIN/webhook`
+3. **Verify token**: same as `WEBHOOK_VERIFY_TOKEN` in `.env`
+4. Subscribe to `messages`
 
-## Tech Stack
-- **Frontend**: React 18, Vite, React Router v6, Axios
-- **Backend**: Node.js, Express, JWT, bcryptjs
-- **AI**: Groq API
-- **Messaging**: Meta WhatsApp Cloud API v18.0
-- **Deployment**: Render (backend), Vercel (frontend)
+Use [ngrok](https://ngrok.com/) for local testing:
 
-## Test Login
+```bash
+ngrok http 5000
+# Set callback URL to https://xxxx.ngrok.io/webhook
+```
+
+## Admin panel
+
+| Page | Description |
+|------|-------------|
+| Dashboard | Messages handled, intents matched, voice sent, silent ignores |
+| Intents | CRUD, examples, threshold, workflows (text / voice / collect / HTTP) |
+| Conversations | Message log + collected data search |
+| Users | Block / export WhatsApp users |
+| Bot settings | AI provider (Groq/DeepSeek), human prompt, ElevenLabs voice |
+
+Admin routes require `role: admin` in JWT.
+
+## Intent workflows
+
+1. **text** — Send configured text (optionally polished by AI)
+2. **voice** — ElevenLabs script → WhatsApp audio
+3. **collect_data** — Step-by-step fields; each saved to `collected_data` before continuing
+4. **http** — POST collected payload to your URL after collection
+
+## AI providers
+
+Set in **Bot settings → AI provider**:
+
+- **groq** — Fast Llama models (`GROQ_API_KEY`)
+- **deepseek** — DeepSeek Chat (`DEEPSEEK_API_KEY`)
+- **openai** — GPT-4o-mini for replies (`OPENAI_API_KEY`)
+
+System prompt is editable for natural, human-like tone.
+
+## Production deployment
+
+### Backend (Render / Railway / Fly.io)
+
+- Root: `backend`
+- Start: `npm start`
+- Set all env vars from `.env.example`
+- Public URL must expose `/webhook` and `/api/*`
+
+`backend/render.yaml` included for Render.
+
+### Frontend (Vercel)
+
+- Root directory: `frontend`
+- Build: `npm run build`
+- Output: `dist`
+- Env: `VITE_API_URL=https://your-api.onrender.com`
+
+Update `vercel.json` API proxy if needed.
+
+## Security checklist
+
+- [ ] Strong `JWT_SECRET` (32+ random chars)
+- [ ] Supabase service role key **only** on server
+- [ ] RLS enabled (see `schema.sql`)
+- [ ] Webhook verify token unique per environment
+- [ ] Rate limiting enabled (default 300 req / 15 min in production)
+- [ ] Change default admin password after seed
+
+## Extending
+
+- **New intent**: Admin → Intents → add examples → save (embeddings generated)
+- **Custom HTTP action**: workflow `http` + URL in intent
+- **Stricter silence**: raise threshold (e.g. `0.85`) in Bot settings
+- **Storage for voice logs**: set `KEEP_AUDIO_FILES=true` and extend `elevenLabs.js`
+
+## Test login (local fallback)
+
 - Email: `admin@example.com`
 - Password: `Admin@1234`
+
+## Testing
+
+```bash
+cd backend && npm test
+# With API running:
+SMOKE_BASE_URL=http://localhost:5000 npm test
+```
+
+See `PROJECT_FILES.md` and **`PRODUCTION_AUDIT.md`** for the full per-file review.
+
+## Production bot quality features
+
+- **Strict silence** — no match or ambiguous top-2 intents → no reply
+- **Webhook security** — `META_APP_SECRET` + `X-Hub-Signature-256`
+- **Dedup** — Meta webhook retries ignored by message ID
+- **Per-phone rate limit** — abuse protection (configurable)
+- **Intent cache** — 60s TTL for fast matching at scale
+- **Conversation reuse** — one open thread per phone in Supabase
+- **Data-first collection** — every field persisted before next step
+
+## Removed clutter
+
+The old `file/` folder and broken `documentFlowEngine` were removed. All bot logic lives under `backend/src/services/`.
+
+## License
+
+MIT — use and modify for your business.

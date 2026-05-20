@@ -122,7 +122,7 @@ const S = {
     };
     const variants = {
       primary: { background: T.greenDark, color: T.white },
-      ghost:   { background: 'transparent', color: T.textSecond, border: `1px solid ${T.border}`, background: T.white },
+      ghost:   { background: T.white, color: T.textSecond, border: `1px solid ${T.border}` },
       danger:  { background: T.dangerBg, color: T.danger, border: `1px solid #fecaca` },
       success: { background: T.successBg, color: T.success, border: `1px solid #bbf7d0` },
       dashed:  { background: 'transparent', color: T.textSecond, border: `1.5px dashed ${T.border}`, width: '100%', justifyContent: 'center' },

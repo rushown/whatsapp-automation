@@ -38,13 +38,8 @@ export default function LoginPage() {
     }
   };
 
-  const fillTestUser = () => {
-    setForm({ name: '', email: 'test@wauto.com', password: 'test123' });
-    setMode('login');
-  };
-
   const fillAdmin = () => {
-    setForm({ name: '', email: 'admin@wauto.com', password: 'admin123' });
+    setForm({ name: '', email: 'admin@example.com', password: 'Admin@1234' });
     setMode('login');
   };
 
@@ -165,18 +160,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {mode === 'login' && (
+          {mode === 'login' && import.meta.env.DEV && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--cream)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)' }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Test Credentials</p>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button onClick={fillAdmin} style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: 'white', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                  👤 Admin
-                </button>
-                <button onClick={fillTestUser} style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: 'white', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                  🧑 Test User
-                </button>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>admin@wauto.com / admin123 · test@wauto.com / test123</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dev login</p>
+              <button type="button" onClick={fillAdmin} style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem', background: 'white', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                Fill admin@example.com
+              </button>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Local: admin@example.com / Admin@1234</p>
             </div>
           )}
         </div>

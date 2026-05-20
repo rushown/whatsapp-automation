@@ -132,32 +132,43 @@ router.get('/phone-info', authenticate, async (req, res) => {
   }
 });
 
-// AI Reply using Groq
+// Admin-only: draft a reply (NOT the live webhook bot — no intent gate here)
 router.post('/ai-reply', authenticate, async (req, res) => {
   try {
-    const { incomingMessage, context = '' } = req.body;
+    const { incomingMessage, context = '', provider: reqProvider } = req.body;
     const keys = getKeys(req.user.id);
-    if (!keys.groqApiKey) {
-      return res.status(400).json({ error: 'Groq API key not configured' });
+    const { getSupabase } = require('../lib/supabase');
+    const { chatCompletion, HUMAN_SYSTEM_PROMPT } = require('../services/aiProvider');
+
+    let provider = reqProvider || 'groq';
+    let apiKey = keys.groqApiKey;
+    if (provider === 'deepseek') apiKey = keys.deepseekApiKey;
+    if (provider === 'openai') apiKey = keys.openaiApiKey;
+
+    const sb = getSupabase();
+    if (sb) {
+      const { data: botCfg } = await sb.from('bot_config').select('ai_provider, groq_api_key_encrypted, deepseek_api_key_encrypted, openai_api_key_encrypted, ai_system_prompt').eq('key', 'default').maybeSingle();
+      if (botCfg) {
+        provider = botCfg.ai_provider || provider;
+        if (provider === 'deepseek') apiKey = botCfg.deepseek_api_key_encrypted || apiKey;
+        else if (provider === 'openai') apiKey = botCfg.openai_api_key_encrypted || apiKey;
+        else apiKey = botCfg.groq_api_key_encrypted || apiKey;
+      }
     }
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: 'llama3-8b-8192',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful WhatsApp business assistant. Respond professionally and concisely. ${context}`
-          },
-          { role: 'user', content: incomingMessage }
-        ],
-        max_tokens: 300,
-        temperature: 0.7
-      },
-      { headers: { Authorization: `Bearer ${keys.groqApiKey}`, 'Content-Type': 'application/json' } }
-    );
-    const reply = response.data.choices[0].message.content;
-    res.json({ reply });
+
+    if (!apiKey) {
+      return res.status(400).json({ error: `${provider} API key not configured` });
+    }
+
+    const reply = await chatCompletion({
+      provider,
+      apiKey,
+      messages: [{ role: 'user', content: incomingMessage }],
+      systemPrompt: `${HUMAN_SYSTEM_PROMPT}\n\nAdditional context: ${context}`,
+      maxTokens: 300,
+      temperature: 0.5,
+    });
+    res.json({ reply, provider });
   } catch (err) {
     res.status(400).json({ error: err.response?.data?.error?.message || err.message });
   }

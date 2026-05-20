@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /api-keys
+Disallow: /intents
+Disallow: /conversations
+Disallow: /users
+Disallow: /bot-settings
+
+Sitemap: /sitemap.xml

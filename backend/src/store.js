@@ -1,34 +1,24 @@
-// In-memory store (use MongoDB/PostgreSQL in production)
+// In-memory fallback when Supabase is not configured
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 
-// Seed test users
 const users = [
   {
     id: uuidv4(),
     name: 'Admin User',
-    email: 'admin@wauto.com',
-    password: bcrypt.hashSync('admin123', 10),
+    email: 'admin@example.com',
+    password: bcrypt.hashSync('Admin@1234', 10),
     role: 'admin',
     avatar: null,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   },
-  {
-    id: uuidv4(),
-    name: 'Test User',
-    email: 'test@wauto.com',
-    password: bcrypt.hashSync('test123', 10),
-    role: 'user',
-    avatar: null,
-    createdAt: new Date().toISOString()
-  }
 ];
 
-const apiKeys = {}; // userId -> { whatsappToken, phoneNumberId, businessAccountId, groqApiKey, ... }
-const templates = {}; // userId -> []
-const automations = {}; // userId -> []
-const contacts = {}; // userId -> []
-const messages = {}; // userId -> []
-const analytics = {}; // userId -> {}
+const apiKeys = {};
+const templates = {};
+const automations = {};
+const contacts = {};
+const messages = {};
+const analytics = {};
 
 module.exports = { users, apiKeys, templates, automations, contacts, messages, analytics, uuidv4 };

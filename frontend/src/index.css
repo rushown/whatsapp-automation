@@ -350,4 +350,6 @@ tbody tr:hover { background: var(--cream); }
   .page-container { padding: 1rem; }
   .page-header { flex-direction: column; }
   .stat-card { padding: 1rem; }
+  .dashboard-grid { grid-template-columns: 1fr !important; }
+  .modal { max-width: 100% !important; margin: 0.5rem; }
 }

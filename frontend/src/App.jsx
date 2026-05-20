@@ -13,18 +13,28 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ApiKeysPage from './pages/ApiKeysPage';
 import SettingsPage from './pages/SettingsPage';
 import DocumentFlowsPage from './pages/DocumentFlowsPage';
+import IntentsPage from './pages/IntentsPage';
+import ConversationsPage from './pages/ConversationsPage';
+import UsersPage from './pages/UsersPage';
+import BotSettingsPage from './pages/BotSettingsPage';
+import UserPortalLoginPage from './pages/UserPortalLoginPage';
+import UserPortalDashboardPage from './pages/UserPortalDashboardPage';
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--cream)' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div className="spinner" style={{ borderColor: 'rgba(18,140,126,0.2)', borderTopColor: 'var(--green-wa-dark)', width: 40, height: 40, margin: '0 auto 1rem' }} />
-        <p style={{ color: 'var(--text-muted)', fontFamily: 'DM Sans' }}>Loading...</p>
-      </div>
+const LoadingScreen = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--cream)' }}>
+    <div style={{ textAlign: 'center' }}>
+      <div className="spinner" style={{ borderColor: 'rgba(18,140,126,0.2)', borderTopColor: 'var(--green-wa-dark)', width: 40, height: 40, margin: '0 auto 1rem' }} />
+      <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
     </div>
-  );
-  return user ? children : <Navigate to="/login" replace />;
+  </div>
+);
+
+const ProtectedRoute = ({ children, adminOnly = false }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  return children;
 };
 
 const PublicRoute = ({ children }) => {
@@ -47,6 +57,9 @@ function App() {
         />
         <Routes>
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/portal" element={<UserPortalLoginPage />} />
+          <Route path="/portal/dashboard" element={<UserPortalDashboardPage />} />
+
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
@@ -58,6 +71,10 @@ function App() {
             <Route path="api-keys" element={<ApiKeysPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="document-flows" element={<DocumentFlowsPage />} />
+            <Route path="intents" element={<ProtectedRoute adminOnly><IntentsPage /></ProtectedRoute>} />
+            <Route path="conversations" element={<ProtectedRoute adminOnly><ConversationsPage /></ProtectedRoute>} />
+            <Route path="users" element={<ProtectedRoute adminOnly><UsersPage /></ProtectedRoute>} />
+            <Route path="bot-settings" element={<ProtectedRoute adminOnly><BotSettingsPage /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

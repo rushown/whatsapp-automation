@@ -3,21 +3,25 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Send, FileText, Zap, Users, BarChart3,
   Key, Settings, LogOut, MessageSquare, Menu, X, ChevronRight,
-  FileOutput 
+  FileOutput, Target
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const navItems = [
-  { path: '/dashboard',        icon: LayoutDashboard, label: 'Dashboard'       },
-  { path: '/send',             icon: Send,            label: 'Send Message'    },
-  { path: '/templates',        icon: FileText,        label: 'Templates'       },
-  { path: '/automation',       icon: Zap,             label: 'Automation'      },
-  { path: '/contacts',         icon: Users,           label: 'Contacts'        },
-  { path: '/analytics',        icon: BarChart3,       label: 'Analytics'       },
-  { path: '/api-keys',         icon: Key,             label: 'API Keys'        },
-  { path: '/document-flows',   icon: FileOutput,      label: 'Document Flows'  },
-  { path: '/settings',         icon: Settings,        label: 'Settings'        },
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/intents', icon: Target, label: 'Intents', admin: true },
+  { path: '/conversations', icon: MessageSquare, label: 'Conversations', admin: true },
+  { path: '/users', icon: Users, label: 'Users', admin: true },
+  { path: '/bot-settings', icon: Settings, label: 'Bot settings', admin: true },
+  { path: '/send', icon: Send, label: 'Send Message' },
+  { path: '/templates', icon: FileText, label: 'Templates' },
+  { path: '/automation', icon: Zap, label: 'Automation' },
+  { path: '/contacts', icon: Users, label: 'Contacts' },
+  { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/api-keys', icon: Key, label: 'API Keys' },
+  { path: '/document-flows', icon: FileOutput, label: 'Document Flows' },
+  { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Layout() {
@@ -90,7 +94,7 @@ export default function Layout() {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {navItems.map(({ path, icon: Icon, label }) => (
+          {navItems.filter((item) => !item.admin || user?.role === 'admin').map(({ path, icon: Icon, label }) => (
             <NavLink
               key={path}
               to={path}

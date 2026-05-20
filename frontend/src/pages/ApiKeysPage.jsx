@@ -9,6 +9,8 @@ const ApiKeysPage = () => {
     phoneNumberId: '',
     businessAccountId: '',
     groqApiKey: '',
+    deepseekApiKey: '',
+    openaiApiKey: '',
     webhookVerifyToken: '',
   });
   const [show, setShow] = useState({});
@@ -37,6 +39,8 @@ const ApiKeysPage = () => {
     { key: 'phoneNumberId', label: 'Phone Number ID' },
     { key: 'businessAccountId', label: 'Business Account ID' },
     { key: 'groqApiKey', label: 'Groq API Key' },
+    { key: 'deepseekApiKey', label: 'DeepSeek API Key' },
+    { key: 'openaiApiKey', label: 'OpenAI API Key (embeddings)' },
     { key: 'webhookVerifyToken', label: 'Webhook Verify Token' },
   ];
 

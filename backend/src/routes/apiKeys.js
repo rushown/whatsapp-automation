@@ -36,13 +36,23 @@ router.get('/raw', authenticate, (req, res) => {
 // Save API keys
 router.post('/', authenticate, (req, res) => {
   try {
-    const { whatsappToken, phoneNumberId, businessAccountId, groqApiKey, webhookVerifyToken } = req.body;
+    const {
+      whatsappToken,
+      phoneNumberId,
+      businessAccountId,
+      groqApiKey,
+      deepseekApiKey,
+      openaiApiKey,
+      webhookVerifyToken,
+    } = req.body;
     if (!apiKeys[req.user.id]) apiKeys[req.user.id] = {};
-    
+
     if (whatsappToken) apiKeys[req.user.id].whatsappToken = whatsappToken;
     if (phoneNumberId) apiKeys[req.user.id].phoneNumberId = phoneNumberId;
     if (businessAccountId) apiKeys[req.user.id].businessAccountId = businessAccountId;
     if (groqApiKey) apiKeys[req.user.id].groqApiKey = groqApiKey;
+    if (deepseekApiKey) apiKeys[req.user.id].deepseekApiKey = deepseekApiKey;
+    if (openaiApiKey) apiKeys[req.user.id].openaiApiKey = openaiApiKey;
     if (webhookVerifyToken) apiKeys[req.user.id].webhookVerifyToken = webhookVerifyToken;
     
     res.json({ success: true, message: 'API keys saved successfully' });
