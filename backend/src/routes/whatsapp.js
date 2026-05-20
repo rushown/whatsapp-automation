@@ -2,10 +2,26 @@ const express = require('express');
 const axios = require('axios');
 const { authenticate } = require('../middleware/auth');
 const { messages, uuidv4 } = require('../store');
-const { getKeys } = require('../lib/db');
+const { getSupabase } = require('../lib/supabase');
 
 const router = express.Router();
 
+async function getKeys(userId) {
+  const sb = getSupabase();
+  if (!sb) return {};
+  const { data } = await sb.from('api_keys').select('*').eq('user_id', userId).maybeSingle();
+  if (!data) return {};
+  return {
+    whatsappToken:      data.whatsapp_token,
+    phoneNumberId:      data.phone_number_id,
+    businessAccountId:  data.business_account_id,
+    groqApiKey:         data.groq_api_key,
+    deepseekApiKey:     data.deepseek_api_key,
+    openaiApiKey:       data.openai_api_key,
+    elevenLabsApiKey:   data.elevenlabs_api_key,
+    webhookVerifyToken: data.webhook_verify_token,
+  };
+}
 
 const metaAPI = (token, version = 'v18.0') =>
   axios.create({
@@ -29,8 +45,7 @@ router.post('/send', authenticate, async (req, res) => {
       payload = req.body.templatePayload;
     }
     const response = await api.post(`/${keys.phoneNumberId}/messages`, payload);
-    
-    // Store message
+
     if (!messages[req.user.id]) messages[req.user.id] = [];
     messages[req.user.id].push({
       id: uuidv4(),
@@ -132,12 +147,11 @@ router.get('/phone-info', authenticate, async (req, res) => {
   }
 });
 
-// Admin-only: draft a reply (NOT the live webhook bot — no intent gate here)
+// Admin-only: draft a reply
 router.post('/ai-reply', authenticate, async (req, res) => {
   try {
     const { incomingMessage, context = '', provider: reqProvider } = req.body;
     const keys = await getKeys(req.user.id);
-    const { getSupabase } = require('../lib/supabase');
     const { chatCompletion, HUMAN_SYSTEM_PROMPT } = require('../services/aiProvider');
 
     let provider = reqProvider || 'groq';

@@ -29,8 +29,6 @@ const app = express();
 app.locals.memoryIntents = [];
 
 validateProductionConfig();
-const { initDb } = require('./lib/db');
-initDb().catch(err => console.error('[db] init failed:', err.message));
 
 app.use(helmet({ contentSecurityPolicy: config.nodeEnv === 'production' }));
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
@@ -54,7 +52,6 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Capture raw body for Meta webhook signature (POST /webhook only)
 app.use(
   express.json({
     limit: '10mb',
