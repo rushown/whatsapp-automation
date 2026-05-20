@@ -12,5 +12,5 @@ services:
       - key: WEBHOOK_VERIFY_TOKEN
         generateValue: true
       - key: FRONTEND_URL
-        value: https://your-frontend-url.vercel.app
+        value: https://surajdai.vercel.app
     healthCheckPath: /api/health
