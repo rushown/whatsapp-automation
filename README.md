@@ -36,10 +36,40 @@ flowchart LR
 - **Voice**: ElevenLabs
 - **Messaging**: Meta Graph API `v21.0` (configurable)
 
+## Quick start (one command)
+
+Clone the repo and run everything — backend, frontend, and PostgreSQL — with a single script:
+
+```bash
+git clone https://github.com/rushown/whatsapp-automation.git
+cd whatsapp-automation
+chmod +x dev.sh && ./dev.sh
+```
+
+Or run it directly without cloning first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rushown/whatsapp-automation/main/dev.sh | bash
+```
+
+The script will:
+- Check Node.js and npm are installed
+- Auto-start PostgreSQL (Mac/Linux) and create the `whatsapp_bot` database
+- Copy `.env.example` → `backend/.env` if no `.env` exists
+- Create `frontend/.env` with `VITE_API_URL=http://localhost:5000`
+- Install all dependencies for both backend and frontend
+- Start backend on **port 5000** and frontend on **port 3000**
+- Print all URLs when ready
+
+Press **Ctrl+C** to stop everything cleanly.
+
+> **Requirements:** Node.js 18+, npm, PostgreSQL (optional — only needed if not using Supabase for the `api_keys` table)
+
 ## Project structure
 
 ```
 whatsapp-automation/
+├── dev.sh                    # One-command local dev startup
 ├── backend/src/
 │   ├── index.js              # Server + webhook
 │   ├── services/
@@ -56,12 +86,12 @@ whatsapp-automation/
 └── scripts/seed-admin.js
 ```
 
-## Local setup
+## Manual local setup
 
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo> whatsapp-automation
+git clone https://github.com/rushown/whatsapp-automation.git
 cd whatsapp-automation
 
 cd backend && npm install
@@ -115,12 +145,12 @@ Without Supabase, the API falls back to in-memory storage and a local admin user
 # Terminal 1 — API (port 5000)
 cd backend && npm run dev
 
-# Terminal 2 — Admin UI (port 5173)
+# Terminal 2 — Admin UI (port 3000)
 cd frontend && npm run dev
 ```
 
-- Admin: http://localhost:5173/login  
-- User portal: http://localhost:5173/portal  
+- Admin: http://localhost:3000/login
+- User portal: http://localhost:3000/portal
 
 ## Meta webhook configuration
 
@@ -167,39 +197,30 @@ System prompt is editable for natural, human-like tone.
 
 ## Production deployment
 
-### Backend (Render / Railway / Fly.io)
+### Backend (Render)
 
-- Root: `backend`
-- Start: `npm start`
-- Set all env vars from `.env.example`
-- Public URL must expose `/webhook` and `/api/*`
-
-`backend/render.yaml` included for Render.
+- New → Web Service → connect repo
+- **Root Directory**: `backend`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- Set all env vars in Render dashboard
 
 ### Frontend (Vercel)
 
-- Root directory: `frontend`
-- Build: `npm run build`
-- Output: `dist`
-- Env: `VITE_API_URL=https://your-api.onrender.com`
-
-Update `vercel.json` API proxy if needed.
+- New project → connect repo
+- **Root Directory**: `frontend`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Env**: `VITE_API_URL=https://your-api.onrender.com`
 
 ## Security checklist
 
-- [ ] Strong `JWT_SECRET` (32+ random chars)
+- [ ] Strong `JWT_SECRET` (32+ random chars) — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 - [ ] Supabase service role key **only** on server
 - [ ] RLS enabled (see `schema.sql`)
 - [ ] Webhook verify token unique per environment
 - [ ] Rate limiting enabled (default 300 req / 15 min in production)
 - [ ] Change default admin password after seed
-
-## Extending
-
-- **New intent**: Admin → Intents → add examples → save (embeddings generated)
-- **Custom HTTP action**: workflow `http` + URL in intent
-- **Stricter silence**: raise threshold (e.g. `0.85`) in Bot settings
-- **Storage for voice logs**: set `KEEP_AUDIO_FILES=true` and extend `elevenLabs.js`
 
 ## Test login (local fallback)
 
@@ -214,8 +235,6 @@ cd backend && npm test
 SMOKE_BASE_URL=http://localhost:5000 npm test
 ```
 
-See `PROJECT_FILES.md` and **`PRODUCTION_AUDIT.md`** for the full per-file review.
-
 ## Production bot quality features
 
 - **Strict silence** — no match or ambiguous top-2 intents → no reply
@@ -225,10 +244,6 @@ See `PROJECT_FILES.md` and **`PRODUCTION_AUDIT.md`** for the full per-file revie
 - **Intent cache** — 60s TTL for fast matching at scale
 - **Conversation reuse** — one open thread per phone in Supabase
 - **Data-first collection** — every field persisted before next step
-
-## Removed clutter
-
-The old `file/` folder and broken `documentFlowEngine` were removed. All bot logic lives under `backend/src/services/`.
 
 ## License
 
